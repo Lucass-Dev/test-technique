@@ -26,11 +26,18 @@ app.get('/cards', (req, res)=>{
 });
 
 app.get('/cardsById', (req, res)=>{
-    const cardID = req.query.cardID;
+    const reqCardID = req.query.cardID;
+    let response = `Sorry, no cards have been found with such id :${reqCardID}`;
+    cards.forEach(card => {
+        if (card.id = reqCardID) {
+            response = card
+        }
+    });
+    res.send(response)
 });
 
 
-app.post('/postCard', (req, res)=>{
+app.post('/cards', (req, res)=>{
     const test = new Cards(req.body.id, req.body.cardName, req.body.members, req.body.description, req.body.tags, req.body.checklist, req.body.daedline, req.body.updtateDate, req.body.createDate);
     cards.push(test)
     res.send(`Cards created at id :${req.body.id}`)
