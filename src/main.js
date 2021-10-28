@@ -6,7 +6,9 @@ const cors = require('cors')
 const logger = require('./utils/logger')
 
 const {Cards} = require('./cards.js')
+const {List} = require('./list.js')
 const { response } = require('express')
+const list = require('./list.js')
 
 const app = express()
 const port = process.env.HTTP_PORT
@@ -20,8 +22,11 @@ app.use(bodyParser.json())
 
 
 let cards = []
+let lists = []
 // insert your router here
 
+
+//ROUTE FOR CARDS
 app.get('/cards', (req, res)=>{    
     res.send(cards)
 });
@@ -61,7 +66,53 @@ app.patch('/cards', (req, res) =>{
     cards.forEach(element => {
         if (element.id == id) {
             element = new Cards(id, req.body.cardName, req.body.members, req.body.description, req.body.tags, req.body.checklist, req.body.deadline, req.body.updateDate, req.body.createDate);
-            response = `Card at id : ${id} have been updated`
+            response = `Card at id : ${id} have been updated`;
+        }
+    });
+    res.send(response)
+});
+
+//ROUTE FOR LIST
+
+app.get('/lists', (req, res) =>{
+    res.send(lists);
+})
+
+app.get('/listsById', (req, res) =>{
+    const id = req.query.id
+    let response = `Sorry, no list have been found with such id : ${id}`
+    lists.forEach(element => {
+        if (element.id == id) {
+            response = element
+        }
+    });
+    res.send(response);
+});
+
+app.post('/lists', (req, res) =>{
+    const id =  lists.length;
+    const newList = new List(id, req.body.listName, req.body.cardsArray, req.body.createDate);
+    lists.push(newList);
+    res.send(`Cards created at id :${id}`)
+});
+
+app.delete('/lists', (req, res)=>{
+    const id = req.query.id
+    let response = `Cannot find element at id : ${id}`
+    const deletedList = lists.splice(id, 1)
+    if (deletedList.length != 0) {
+        response = `Card deleted at id : ${id}`
+    }
+    res.send(response)
+});
+
+app.patch('/lists', (req, res) =>{
+    const id = req.query.id
+    let response = `Cannot find element at id : ${id}`
+    lists.forEach(element => {
+        if (element.id == id) {
+            element = new Cards(id, req.body.cardName, req.body.members, req.body.description, req.body.tags, req.body.checklist, req.body.deadline, req.body.updateDate, req.body.createDate);
+            response = `Card at id : ${id} have been updated`;
         }
     });
     res.send(response)
