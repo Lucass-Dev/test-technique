@@ -48,7 +48,7 @@ app.post('/cards', (req, res)=>{
     const newCard = new Cards(id, req.body.cardName, req.body.members, req.body.description, req.body.tags, req.body.checklist, req.body.deadline, req.body.updateDate, req.body.createDate);
     cards.push(newCard)
 
-    const listName = req.query.listName
+    const listName = req.query.newListName
     lists.forEach(element => {
         if (element.listName == listName) {
             element.cardsArray.push(newCard)
@@ -68,14 +68,40 @@ app.delete('/cards', (req, res)=>{
 });
 
 app.patch('/cards', (req, res) =>{
-    const id = req.query.id
+    const id = parseInt(req.query.id)
+    const newListName = req.query.newListName
+    let patch
     let response = `Cannot find element at id : ${id}`
     cards.forEach(element => {
         if (element.id == id) {
-            element = new Cards(id, req.body.cardName, req.body.members, req.body.description, req.body.tags, req.body.checklist, req.body.deadline, req.body.updateDate, req.body.createDate);
+
+            const test = cards.map(function(e){
+                return e.id
+            }).indexOf(id)
+            cards.splice(test, 1)
+            patch = new Cards(id, req.body.cardName, req.body.members, req.body.description, req.body.tags, req.body.checklist, req.body.deadline, req.body.updateDate, req.body.createDate);
+            cards.push(patch)
+            
             response = `Card at id : ${id} have been updated`;
         }
     });
+    
+    
+    lists.forEach(list => {
+        list.cardsArray.forEach(card => {
+            if (card.id == id) {
+                const test = list.cardsArray.map(function(e){
+                    return e.id
+                }).indexOf(id)
+                list.cardsArray.splice(test, 1)
+            };
+        });
+    });
+    lists.forEach(list =>{
+        if (list.listName == newListName) {
+            list.cardsArray.push(patch)
+        }
+    })
     res.send(response)
 });
 
@@ -86,7 +112,7 @@ app.get('/lists', (req, res) =>{
 })
 
 app.get('/listsById', (req, res) =>{
-    const id = req.query.id
+    const id = parseInt(req.query.id)
     let response = `Sorry, no list have been found with such id : ${id}`
     lists.forEach(element => {
         if (element.id == id) {
@@ -104,7 +130,7 @@ app.post('/lists', (req, res) =>{
 });
 
 app.delete('/lists', (req, res)=>{
-    const id = req.query.id
+    const id = parseInt(req.query.id)
     let response = `Cannot find element at id : ${id}`
     const deletedList = lists.splice(id, 1)
     if (deletedList.length != 0) {
@@ -114,7 +140,7 @@ app.delete('/lists', (req, res)=>{
 });
 
 app.patch('/lists', (req, res) =>{
-    const id = req.query.id
+    const id = parseInt(req.query.id)
     let response = `Cannot find element at id : ${id}`
     lists.forEach(element => {
         if (element.id == id) {
