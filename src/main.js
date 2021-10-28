@@ -47,7 +47,14 @@ app.post('/cards', (req, res)=>{
     const id = cards.length
     const newCard = new Cards(id, req.body.cardName, req.body.members, req.body.description, req.body.tags, req.body.checklist, req.body.deadline, req.body.updateDate, req.body.createDate);
     cards.push(newCard)
-    res.send(`Cards created at id :${id}`)
+
+    const listName = req.query.listName
+    lists.forEach(element => {
+        if (element.listName == listName) {
+            element.cardsArray.push(newCard)
+        }
+    });
+    res.send(`Cards created at id :${id} and pushed into '${listName}' List`)
 });
 
 app.delete('/cards', (req, res)=>{
