@@ -7,8 +7,9 @@ const logger = require('./utils/logger')
 
 const {Cards} = require('./cards.js')
 const {List} = require('./list.js')
+const {User} = require('./user.js')
+const {Table} = require('./table.js')
 const { response } = require('express')
-const list = require('./list.js')
 
 const app = express()
 const port = process.env.HTTP_PORT
@@ -23,6 +24,10 @@ app.use(bodyParser.json())
 
 let cards = []
 let lists = []
+let users = []
+let table = new Table(0, "Projet A", lists, "xx-xx-xxxx", "xx-xx-xxxx")
+
+
 // insert your router here
 
 
@@ -75,10 +80,10 @@ app.patch('/cards', (req, res) =>{
     cards.forEach(element => {
         if (element.id == id) {
 
-            const test = cards.map(function(e){
+            const specificId = cards.map(function(e){
                 return e.id
             }).indexOf(id)
-            cards.splice(test, 1)
+            cards.splice(specificId, 1)
             patch = new Cards(id, req.body.cardName, req.body.members, req.body.description, req.body.tags, req.body.checklist, req.body.deadline, req.body.updateDate, req.body.createDate);
             cards.push(patch)
             
@@ -90,10 +95,10 @@ app.patch('/cards', (req, res) =>{
     lists.forEach(list => {
         list.cardsArray.forEach(card => {
             if (card.id == id) {
-                const test = list.cardsArray.map(function(e){
+                const specificId = list.cardsArray.map(function(e){
                     return e.id
                 }).indexOf(id)
-                list.cardsArray.splice(test, 1)
+                list.cardsArray.splice(specificId, 1)
             };
         });
     });
@@ -132,21 +137,87 @@ app.post('/lists', (req, res) =>{
 app.delete('/lists', (req, res)=>{
     const id = parseInt(req.query.id)
     let response = `Cannot find element at id : ${id}`
-    const deletedList = lists.splice(id, 1)
-    if (deletedList.length != 0) {
-        response = `Card deleted at id : ${id}`
-    }
+    lists.forEach(list => {
+        if (list.id == id) {
+            const specificId = lists.map(function(e){
+                return e.id
+            }).indexOf(id)
+            lists.splice(specificId, 1)
+        };
+    });
     res.send(response)
 });
 
 app.patch('/lists', (req, res) =>{
     const id = parseInt(req.query.id)
     let response = `Cannot find element at id : ${id}`
-    lists.forEach(element => {
-        if (element.id == id) {
-            element = new Cards(id, req.body.cardName, req.body.members, req.body.description, req.body.tags, req.body.checklist, req.body.deadline, req.body.updateDate, req.body.createDate);
-            response = `Card at id : ${id} have been updated`;
+    let updateList;
+    lists.forEach(list => {
+        if (list.id == id) {
+            const specificId = lists.map(function(e){
+                return e.id
+            }).indexOf(id)
+            lists.splice(specificId, 1)
+            updateList = new Cards(id, req.body.cardName, req.body.members, req.body.description, req.body.tags, req.body.checklist, req.body.deadline, req.body.updateDate, req.body.createDate);
+            lists.push(updateList)
+            response = `User at id : ${id} have been updated`;
         }
+    });
+    res.send(response)
+});
+
+//ROUTES FOR USERS
+
+app.get('/users', (req, res) =>{
+    res.send(users)
+})
+
+app.get('/usersById', (req, res) =>{
+    const id = parseInt(req.query.id);
+    let response = `Cannot find element at id : ${id}`
+    users.forEach(element => {
+        if (element.id == id) {
+            response = element
+        }
+    });
+    res.send(response)
+});
+
+app.post('/users', (req, res) => {
+    const id = users.length;
+    const newUser = new User(id, req.body.pseudo, req.body.mail, req.body.date, req.body.relatedTable);
+    users.push(newUser);
+    res.send(`Cards created at id :${id}`)
+});
+
+app.patch('/users', (req, res) => {
+    const id = parseInt(req.query.id)
+    let response = `Cannot find element at id : ${id}`
+    let updatedUser;
+    users.forEach(user => {
+        if (user.id == id) {
+            const specificId = users.map(function(e){
+                return e.id
+            }).indexOf(id)
+            users.splice(specificId, 1)
+            updatedUser = new User(id, req.body.pseudo, req.body.mail, req.body.date, req.body.relatedTable);
+            users.push(updatedUser)
+            response = `User at id : ${id} have been updated`;
+        }
+    });
+    res.send(response)
+});
+
+app.delete('/users', (req, res) => {
+    const id = parseInt(req.query.id)
+    let response = `Cannot find element at id : ${id}`
+    users.forEach(user => {
+        if (user.id == id) {
+            const specificId = users.map(function(e){
+                return e.id
+            }).indexOf(id)
+            users.splice(specificId, 1)
+        };
     });
     res.send(response)
 });
