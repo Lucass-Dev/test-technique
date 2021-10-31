@@ -4,11 +4,12 @@ const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
 const logger = require('./utils/logger')
+const {writeFile} = require('./utils/write')
 
-const {Cards} = require('./cards.js')
-const {List} = require('./list.js')
-const {User} = require('./user.js')
-const {Table} = require('./table.js')
+const {Cards} = require('./cards')
+const {List} = require('./list')
+const {User} = require('./user')
+const {Table} = require('./table')
 const { response } = require('express')
 
 const app = express()
@@ -25,14 +26,65 @@ app.use(bodyParser.json())
 let cards = []
 let lists = []
 let users = []
-let table = new Table(0, "Projet A", lists, "xx-xx-xxxx", "xx-xx-xxxx")
-
+let tables = [];
 
 // insert your router here
 
+//ROUTE FOR TABLE
+
+app.post('/table', (req, res) => {
+    let newTable = new Table(req.body.id, req.body.tableName, lists, req.body.updateDate, req.body.createDate, req.body.ownerId);
+    let userId = newTable.ownerId;
+
+    users.forEach(user => {
+        if(user.id == userId){
+            user.relatedTable = table.id
+        }
+    });
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] Table created\n`)
+    res.send("Table created successfully")
+});
+app.patch('/table', (req, res) => {
+    table.listArray = lists;
+    table.updateDate = "xx-xx-xxxx"
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] Tbale updated\n`)
+    res.send("Table updated successfully")
+});
+
+app.get('/table', (req, res) => {
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] All tables getted\n`)
+    res.send(tables)
+});
+
+app.delete('/table', (req, res) => {
+    const id = parseInt(req.query.id)
+    let response = `Cannot find element at id : ${id}`
+    tables.forEach(table => {
+        if (table.id == id) {
+            const specificId = tables.map(function(e){
+                return e.id
+            }).indexOf(id)
+            tables.splice(specificId, 1)
+            response = `table at id: ${id} have been deleted`
+        };
+    });
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] Table ${id} deleted\n`)
+    res.send(response)
+});
 
 //ROUTE FOR CARDS
-app.get('/cards', (req, res)=>{    
+app.get('/cards', (req, res)=>{
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] All cards getted\n`)
     res.send(cards)
 });
 
@@ -44,13 +96,15 @@ app.get('/cardsById', (req, res)=>{
             response = card
         }
     });
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] Cards ${id} getted\n`)
     res.send(response)
 });
 
 
 app.post('/cards', (req, res)=>{
-    const id = cards.length
-    const newCard = new Cards(id, req.body.cardName, req.body.members, req.body.description, req.body.tags, req.body.checklist, req.body.deadline, req.body.updateDate, req.body.createDate);
+    const newCard = new Cards(req.body.id, req.body.cardName, req.body.members, req.body.description, req.body.tags, req.body.checklist, req.body.deadline, req.body.updateDate, req.body.createDate);
     cards.push(newCard)
 
     const listName = req.query.newListName
@@ -59,16 +113,27 @@ app.post('/cards', (req, res)=>{
             element.cardsArray.push(newCard)
         }
     });
-    res.send(`Cards created at id :${id} and pushed into '${listName}' List`)
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] Cards ${id} created\n`)
+    res.send(`Cards created at id :${req.body.id} and pushed into '${listName}' List`)
 });
 
 app.delete('/cards', (req, res)=>{
-    const id = req.query.id
+    const id = parseInt(req.query.id)
     let response = `Cannot find element at id : ${id}`
-    const deletedCard = cards.splice(id, 1)
-    if (deletedCard.length != 0) {
-        response = `Card deleted at id : ${id}`
-    }
+    cards.forEach(card => {
+        if (card.id == id) {
+            const specificId = cards.map(function(e){
+                return e.id
+            }).indexOf(id)
+            cards.splice(specificId, 1)
+            response = `card at id: ${id} have been deleted`
+        };
+    });
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] Card ${id} deleted\n`)
     res.send(response)
 });
 
@@ -107,12 +172,19 @@ app.patch('/cards', (req, res) =>{
             list.cardsArray.push(patch)
         }
     })
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] Cards ${id} updated\n`)
     res.send(response)
 });
 
 //ROUTE FOR LIST
 
 app.get('/lists', (req, res) =>{
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] All lists getted\n`)
+
     res.send(lists);
 })
 
@@ -124,14 +196,20 @@ app.get('/listsById', (req, res) =>{
             response = element
         }
     });
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] List ${id} getted\n`)
     res.send(response);
 });
 
 app.post('/lists', (req, res) =>{
-    const id =  lists.length;
+    const id =  req.body.id;
     const newList = new List(id, req.body.listName, req.body.cardsArray, req.body.createDate);
     lists.push(newList);
     res.send(`Cards created at id :${id}`)
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] List ${id} created\n`)
 });
 
 app.delete('/lists', (req, res)=>{
@@ -143,8 +221,12 @@ app.delete('/lists', (req, res)=>{
                 return e.id
             }).indexOf(id)
             lists.splice(specificId, 1)
+            response = `list at id: ${id} have been deleted`
         };
     });
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] List ${id} deleted\n`)
     res.send(response)
 });
 
@@ -163,12 +245,18 @@ app.patch('/lists', (req, res) =>{
             response = `User at id : ${id} have been updated`;
         }
     });
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] List ${id} updated\n`)
     res.send(response)
 });
 
 //ROUTES FOR USERS
 
 app.get('/users', (req, res) =>{
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] All users getted\n`)
     res.send(users)
 })
 
@@ -180,14 +268,20 @@ app.get('/usersById', (req, res) =>{
             response = element
         }
     });
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] User ${id} getted\n`)
     res.send(response)
 });
 
 app.post('/users', (req, res) => {
-    const id = users.length;
+    const id = req.body.id
     const newUser = new User(id, req.body.pseudo, req.body.mail, req.body.date, req.body.relatedTable);
     users.push(newUser);
-    res.send(`Cards created at id :${id}`)
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] User ${id} created\n`)
+    res.send(`User created at id :${id}`)
 });
 
 app.patch('/users', (req, res) => {
@@ -205,6 +299,9 @@ app.patch('/users', (req, res) => {
             response = `User at id : ${id} have been updated`;
         }
     });
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] User ${id} updated\n`)
     res.send(response)
 });
 
@@ -217,8 +314,12 @@ app.delete('/users', (req, res) => {
                 return e.id
             }).indexOf(id)
             users.splice(specificId, 1)
+            response = `User at id : ${id} have been deleted`;
         };
     });
+    let date = Date.now()
+    date = Date(date)
+    writeFile(`[ ${date} ] User ${id} deleted\n`)
     res.send(response)
 });
 //other

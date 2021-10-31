@@ -1,0 +1,2 @@
+[ Sun Oct 31 2021 00:33:20 GMT+0200 (heure d’été d’Europe centrale) ] All cards getted
+[ Sun Oct 31 2021 15:57:03 GMT+0100 (heure normale d’Europe centrale) ] All users getted
